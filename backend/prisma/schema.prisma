@@ -1,0 +1,187 @@
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMINISTRATOR
+  MANAGER
+  ANALYST
+  VIEWER
+}
+
+enum TicketStatus {
+  NEW
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  CANCELLED
+}
+
+enum TicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+enum ReportVisibility {
+  PRIVATE
+  SHARED
+}
+
+model Branch {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  code      String   @unique
+  location  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users          User[]
+  staff          Staff[]
+  serviceTickets ServiceTicket[]
+  transactions   Transaction[]
+
+  @@index([isActive])
+}
+
+model Staff {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  email     String?
+  branchId  String   @db.Uuid
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch          Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  assignedTickets ServiceTicket[]
+  transactions    Transaction[]
+
+  @@index([branchId, isActive])
+}
+
+model User {
+  id           String               @id @default(uuid()) @db.Uuid
+  name         String
+  email        String               @unique
+  passwordHash String
+  role         UserRole             @default(VIEWER)
+  branchId     String?              @db.Uuid
+  isActive     Boolean              @default(true)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  branch       Branch?              @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  savedReports SavedReport[]
+  preference   DashboardPreference?
+  exportLogs   ReportExportLog[]
+
+  @@index([role, isActive])
+  @@index([branchId])
+}
+
+model ServiceTicket {
+  id              String         @id @default(uuid()) @db.Uuid
+  reference       String         @unique
+  title           String?
+  category        String
+  priority        TicketPriority @default(NORMAL)
+  status          TicketStatus   @default(NEW)
+  branchId        String         @db.Uuid
+  assignedStaffId String?        @db.Uuid
+  amount          Decimal        @default(0) @db.Decimal(14, 2)
+  openedAt        DateTime       @default(now())
+  closedAt        DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  branch        Branch @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  assignedStaff Staff? @relation(fields: [assignedStaffId], references: [id], onDelete: SetNull)
+
+  @@index([branchId, openedAt])
+  @@index([branchId, status])
+  @@index([status, priority])
+  @@index([openedAt])
+  @@index([closedAt])
+}
+
+model Transaction {
+  id              String            @id @default(uuid()) @db.Uuid
+  reference       String            @unique
+  branchId        String            @db.Uuid
+  staffId         String?           @db.Uuid
+  category        String
+  amount          Decimal           @db.Decimal(14, 2)
+  currency        String            @default("LKR")
+  status          TransactionStatus @default(COMPLETED)
+  description     String?
+  transactionDate DateTime          @default(now())
+  createdAt       DateTime          @default(now())
+
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  staff  Staff? @relation(fields: [staffId], references: [id], onDelete: SetNull)
+
+  @@index([branchId, transactionDate])
+  @@index([branchId, status, transactionDate])
+  @@index([status, transactionDate])
+  @@index([transactionDate])
+}
+
+model SavedReport {
+  id         String           @id @default(uuid()) @db.Uuid
+  ownerId    String           @db.Uuid
+  title      String
+  dataset    String
+  configJson Json
+  visibility ReportVisibility @default(PRIVATE)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  owner      User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  exportLogs ReportExportLog[]
+
+  @@index([ownerId, updatedAt])
+  @@index([visibility])
+  @@index([dataset])
+}
+
+model DashboardPreference {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @unique @db.Uuid
+  widgetsJson Json
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ReportExportLog {
+  id          String       @id @default(uuid()) @db.Uuid
+  actorId     String       @db.Uuid
+  reportId    String?      @db.Uuid
+  dataset     String
+  filtersJson Json?
+  rowCount    Int          @default(0)
+  createdAt   DateTime     @default(now())
+
+  actor  User         @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  report SavedReport? @relation(fields: [reportId], references: [id], onDelete: SetNull)
+
+  @@index([actorId, createdAt])
+  @@index([dataset, createdAt])
+}

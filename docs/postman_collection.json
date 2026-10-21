@@ -1,0 +1,1056 @@
+{
+  "info": {
+    "_postman_id": "b186b8c9-0414-4e78-9538-4f8be91a13e2",
+    "name": "Neirah Tech Solutions - Dashboard, Reporting & Analytics API",
+    "description": "Comprehensive API collection for the Dashboard, Reporting & Analytics Management System. Includes authentication presets for all 4 roles, dashboard analytics, dynamic reporting, saved report management, CSV exports with formula injection defense, admin data inspection, and validation/security negative test cases.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "viewerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "managerColomboToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "savedReportId",
+      "value": "report-tickets-by-branch",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01. Authentication",
+      "item": [
+        {
+          "name": "Login - Administrator",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.accessToken) {",
+                  "    pm.collectionVariables.set('authToken', jsonData.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@neirahtech.com\",\n  \"password\": \"admin12345678\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticates as ADMINISTRATOR with full organization-wide access."
+          }
+        },
+        {
+          "name": "Login - Manager (Colombo Branch Scoped)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.accessToken) {",
+                  "    pm.collectionVariables.set('managerColomboToken', jsonData.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"manager.colombo@neirahtech.com\",\n  \"password\": \"manager12345678\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticates as MANAGER scoped strictly to Colombo Branch."
+          }
+        },
+        {
+          "name": "Login - Manager (Global / Org-wide)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"manager.global@neirahtech.com\",\n  \"password\": \"manager12345678\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticates as organization-wide MANAGER."
+          }
+        },
+        {
+          "name": "Login - Analyst",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"analyst@neirahtech.com\",\n  \"password\": \"analyst12345678\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticates as ANALYST with reporting and export access."
+          }
+        },
+        {
+          "name": "Login - Viewer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.accessToken) {",
+                  "    pm.collectionVariables.set('viewerToken', jsonData.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"viewer@neirahtech.com\",\n  \"password\": \"viewer12345678\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticates as VIEWER (strictly read-only permissions)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "02. Dashboard",
+      "item": [
+        {
+          "name": "Get Summary KPIs (Filtered by Date & Branch)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/summary?from=2026-01-01&to=2026-12-31&branchId=branch-colombo",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "summary"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-12-31"
+                },
+                {
+                  "key": "branchId",
+                  "value": "branch-colombo"
+                }
+              ]
+            },
+            "description": "Returns 6 primary KPIs: totalTickets, openTickets, resolvedTickets, avgResolutionTimeHours, transactionTotal (completed only), and transactionCount."
+          }
+        },
+        {
+          "name": "Get Summary KPIs (Organization Wide)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "summary"]
+            },
+            "description": "Returns organization-wide KPIs across all active branches without date constraints."
+          }
+        },
+        {
+          "name": "Get Dashboard Trends",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/trends?from=2026-01-01&to=2026-10-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "trends"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-10-31"
+                }
+              ]
+            },
+            "description": "Monthly chronological trend series of ticket volumes and transaction revenue for line/bar charts."
+          }
+        },
+        {
+          "name": "Get Dashboard Breakdowns",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/breakdown?from=2026-01-01&to=2026-10-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "breakdown"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-10-31"
+                }
+              ]
+            },
+            "description": "Returns status breakdown (donut chart), branch breakdown (bar chart), priority breakdown, and category breakdown."
+          }
+        },
+        {
+          "name": "Get Dashboard Preferences",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/preferences",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "preferences"]
+            },
+            "description": "Fetches current user's personalized widget visibility and ordering settings."
+          }
+        },
+        {
+          "name": "Update Dashboard Preferences",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"widgetsJson\": {\n    \"cards\": [\n      { \"id\": \"totalTickets\", \"visible\": true },\n      { \"id\": \"openTickets\", \"visible\": true },\n      { \"id\": \"resolvedTickets\", \"visible\": true },\n      { \"id\": \"avgResolutionTime\", \"visible\": true },\n      { \"id\": \"transactionTotal\", \"visible\": true },\n      { \"id\": \"transactionCount\", \"visible\": true }\n    ],\n    \"charts\": [\n      { \"id\": \"statusDonut\", \"visible\": true },\n      { \"id\": \"volumeTrend\", \"visible\": true },\n      { \"id\": \"branchRevenue\", \"visible\": true }\n    ]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/preferences",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "preferences"]
+            },
+            "description": "Saves customized card and chart visibility and ordering for the authenticated user."
+          }
+        }
+      ]
+    },
+    {
+      "name": "03. Branches",
+      "item": [
+        {
+          "name": "List Branches",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/branches",
+              "host": ["{{baseUrl}}"],
+              "path": ["branches"]
+            },
+            "description": "Returns list of branches. Organization-wide roles receive all branches; branch-scoped users receive only their authorized branch."
+          }
+        }
+      ]
+    },
+    {
+      "name": "04. Reporting & Report Explorer",
+      "item": [
+        {
+          "name": "Get Dataset Metadata",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reporting/datasets",
+              "host": ["{{baseUrl}}"],
+              "path": ["reporting", "datasets"]
+            },
+            "description": "Returns available report datasets (ServiceTicket, Transaction), available dimensions, metrics, and filter options."
+          }
+        },
+        {
+          "name": "Preview Report - ServiceTicket by Branch",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataset\": \"ServiceTicket\",\n  \"dimension\": \"branch\",\n  \"metric\": \"count\",\n  \"from\": \"2026-01-01\",\n  \"to\": \"2026-10-31\",\n  \"filters\": {},\n  \"sortBy\": \"value\",\n  \"sortOrder\": \"desc\",\n  \"page\": 1,\n  \"pageSize\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reports/preview",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "preview"]
+            },
+            "description": "Executes dynamic aggregation of Service Tickets grouped by branch with pagination, sorting, and summary metrics."
+          }
+        },
+        {
+          "name": "Preview Report - Transaction by Category (Sum)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataset\": \"Transaction\",\n  \"dimension\": \"category\",\n  \"metric\": \"sum\",\n  \"from\": \"2026-01-01\",\n  \"to\": \"2026-10-31\",\n  \"filters\": { \"status\": \"COMPLETED\" },\n  \"sortBy\": \"value\",\n  \"sortOrder\": \"desc\",\n  \"page\": 1,\n  \"pageSize\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reports/preview",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "preview"]
+            },
+            "description": "Aggregates completed transactions by category, summing total amount in LKR."
+          }
+        },
+        {
+          "name": "Export Report as CSV",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataset\": \"ServiceTicket\",\n  \"dimension\": \"branch\",\n  \"metric\": \"count\",\n  \"from\": \"2026-01-01\",\n  \"to\": \"2026-10-31\",\n  \"filters\": {}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reports/export",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "export"]
+            },
+            "description": "Generates a CSV export with spreadsheet formula injection escaping and logs the export in ReportExportLog."
+          }
+        },
+        {
+          "name": "Get Export History Audit Log",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/export-history?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "export-history"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Lists chronological export audit log entries showing exported datasets, filter criteria, row counts, and requesting user."
+          }
+        }
+      ]
+    },
+    {
+      "name": "05. Saved Reports Management",
+      "item": [
+        {
+          "name": "List Saved Reports",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/saved",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "saved"]
+            },
+            "description": "Returns all saved reports accessible to the user (SHARED reports + user's own PRIVATE reports)."
+          }
+        },
+        {
+          "name": "Create Saved Report",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.collectionVariables.set('savedReportId', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Monthly High Priority Tickets by Branch\",\n  \"dataset\": \"ServiceTicket\",\n  \"configJson\": {\n    \"dimension\": \"branch\",\n    \"metric\": \"count\",\n    \"filters\": { \"priority\": \"HIGH\" }\n  },\n  \"visibility\": \"SHARED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reports/saved",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "saved"]
+            },
+            "description": "Saves a reusable report query configuration."
+          }
+        },
+        {
+          "name": "Get Saved Report by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/saved/{{savedReportId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "saved", "{{savedReportId}}"]
+            },
+            "description": "Fetches single saved report details."
+          }
+        },
+        {
+          "name": "Update Saved Report",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated High Priority Tickets Report\",\n  \"visibility\": \"PRIVATE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reports/saved/{{savedReportId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "saved", "{{savedReportId}}"]
+            },
+            "description": "Updates report title, configuration, or visibility."
+          }
+        },
+        {
+          "name": "Delete Saved Report",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/saved/{{savedReportId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "saved", "{{savedReportId}}"]
+            },
+            "description": "Deletes a saved report. Users may only delete reports they own, or administrators can manage all."
+          }
+        }
+      ]
+    },
+    {
+      "name": "06. Admin Inspection",
+      "item": [
+        {
+          "name": "Admin Data Preview - Branches",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/data-preview?dataset=branches&limit=25",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "data-preview"],
+              "query": [
+                {
+                  "key": "dataset",
+                  "value": "branches"
+                },
+                {
+                  "key": "limit",
+                  "value": "25"
+                }
+              ]
+            },
+            "description": "Restricted to ADMINISTRATOR. Inspects seeded branches, counts, and metadata."
+          }
+        },
+        {
+          "name": "Admin Data Preview - Tickets",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/data-preview?dataset=tickets&limit=25",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "data-preview"],
+              "query": [
+                {
+                  "key": "dataset",
+                  "value": "tickets"
+                },
+                {
+                  "key": "limit",
+                  "value": "25"
+                }
+              ]
+            },
+            "description": "Restricted to ADMINISTRATOR. Inspects seeded service tickets with assigned staff and branch."
+          }
+        },
+        {
+          "name": "Admin Data Preview - Transactions",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/data-preview?dataset=transactions&limit=25",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "data-preview"],
+              "query": [
+                {
+                  "key": "dataset",
+                  "value": "transactions"
+                },
+                {
+                  "key": "limit",
+                  "value": "25"
+                }
+              ]
+            },
+            "description": "Restricted to ADMINISTRATOR. Inspects seeded financial transactions."
+          }
+        },
+        {
+          "name": "Admin Data Preview - Staff",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/data-preview?dataset=staff&limit=25",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "data-preview"],
+              "query": [
+                {
+                  "key": "dataset",
+                  "value": "staff"
+                },
+                {
+                  "key": "limit",
+                  "value": "25"
+                }
+              ]
+            },
+            "description": "Restricted to ADMINISTRATOR. Inspects branch staff assignments."
+          }
+        },
+        {
+          "name": "Admin Data Preview - Users",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/data-preview?dataset=users&limit=25",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "data-preview"],
+              "query": [
+                {
+                  "key": "dataset",
+                  "value": "users"
+                },
+                {
+                  "key": "limit",
+                  "value": "25"
+                }
+              ]
+            },
+            "description": "Restricted to ADMINISTRATOR. Inspects system user accounts and roles."
+          }
+        }
+      ]
+    },
+    {
+      "name": "07. Negative & Security Test Cases",
+      "item": [
+        {
+          "name": "400 - Invalid Date Range (from > to)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/summary?from=2026-12-31&to=2026-01-01",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "summary"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-12-31"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-01-01"
+                }
+              ]
+            },
+            "description": "Expects 400 Bad Request because from date is strictly after to date."
+          }
+        },
+        {
+          "name": "400 - Invalid Metric for Dataset",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataset\": \"InvalidDataset\",\n  \"dimension\": \"branch\",\n  \"metric\": \"count\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reports/preview",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "preview"]
+            },
+            "description": "Expects 400 Bad Request when attempting to query an unlisted dataset."
+          }
+        },
+        {
+          "name": "401 - Unauthorized Access (No Token)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "summary"]
+            },
+            "description": "Expects 401 Unauthorized when no Authorization Bearer header is supplied."
+          }
+        },
+        {
+          "name": "403 - Cross-Branch Data Leakage Attempt",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerColomboToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/summary?branchId=branch-kandy",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "summary"],
+              "query": [
+                {
+                  "key": "branchId",
+                  "value": "branch-kandy"
+                }
+              ]
+            },
+            "description": "Expects 403 Forbidden because Colombo Manager cannot access Kandy Branch data."
+          }
+        },
+        {
+          "name": "403 - Admin Data Preview by Viewer",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{viewerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/data-preview?dataset=branches",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "data-preview"],
+              "query": [
+                {
+                  "key": "dataset",
+                  "value": "branches"
+                }
+              ]
+            },
+            "description": "Expects 403 Forbidden because VIEWER does not have ADMINISTRATOR role."
+          }
+        },
+        {
+          "name": "403 - CSV Export Attempt by Viewer",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{viewerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataset\": \"ServiceTicket\",\n  \"dimension\": \"branch\",\n  \"metric\": \"count\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reports/export",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "export"]
+            },
+            "description": "Expects 403 Forbidden because VIEWER role cannot perform CSV exports."
+          }
+        }
+      ]
+    }
+  ]
+}
