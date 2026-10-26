@@ -1,10 +1,15 @@
 
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import express, { Express, Request, Response } from 'express';
 import { AppModule } from './app.module';
 
+const server: Express = express();
+let isInitialized = false;
+
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
 
   app.enableShutdownHooks();
   app.setGlobalPrefix('api');
@@ -22,7 +27,25 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.init();
+  isInitialized = true;
+  return app;
 }
 
-void bootstrap();
+// Handler for Vercel Serverless Function
+export default async function handler(req: Request, res: Response) {
+  if (!isInitialized) {
+    await bootstrap();
+  }
+  return server(req, res);
+}
+
+// Start HTTP server (for local dev, Docker, and Vercel zero-config Fluid Compute)
+void (async () => {
+  const app = await bootstrap();
+  const port = process.env['PORT'] ?? 3000;
+  await app.listen(port);
+  isInitialized = true;
+  console.log(`Backend server running on http://localhost:${port}/api`);
+})();
+

@@ -2,7 +2,7 @@ import type { AuthUser, LoginResponse } from './types'
 
 export type { AuthUser, LoginResponse }
 
-const API_BASE = '/api'
+const API_BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
 
 export function getToken(): string | null {
   return sessionStorage.getItem('dashboard_token')
