@@ -8,12 +8,12 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from './models/Branch.js'
-export type * from './models/Staff.js'
-export type * from './models/User.js'
-export type * from './models/ServiceTicket.js'
-export type * from './models/Transaction.js'
-export type * from './models/SavedReport.js'
-export type * from './models/DashboardPreference.js'
-export type * from './models/ReportExportLog.js'
-export type * from './commonInputTypes.js'
+export type * from './models/Branch'
+export type * from './models/Staff'
+export type * from './models/User'
+export type * from './models/ServiceTicket'
+export type * from './models/Transaction'
+export type * from './models/SavedReport'
+export type * from './models/DashboardPreference'
+export type * from './models/ReportExportLog'
+export type * from './commonInputTypes'
