@@ -8,6 +8,18 @@ import { AppModule } from './app.module';
 const server: Express = express();
 let isInitialized = false;
 
+server.get('/', (_req, res) => {
+  res.json({
+    status: 'online',
+    name: 'Dashboard Reporting & Analytics API',
+    message: 'Backend is running. API endpoints are available under /api',
+    endpoints: {
+      health: '/api/health',
+      api: '/api',
+    },
+  });
+});
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
 
